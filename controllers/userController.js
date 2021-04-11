@@ -1,15 +1,11 @@
-const db = require('../db')
+const query = require('../db')
 
-/////////// Async/await with SQL//////////
-const util = require('util') 
-const query = util.promisify(db.query).bind(db)
 /////// Email Validator/////
 const validator = require('email-validator')
 ///// Hash PWD ////////
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcrypt')
 
 const all_user = async (req,res) => {
-    
     let data
     try {
         data = await query(`SELECT * FROM users`)
@@ -20,7 +16,7 @@ const all_user = async (req,res) => {
 }
 
 const user_register = async (req,res)=>{
-    const {username,password,password2,email} = req.body
+    const {username,password,password2,email,isAdmin} = req.body
     if (!username||!password||!password2||!email) return res.json({status:{error:true,message:`username, password, password2 and email are required`}})
     if (password!==password2) return res.json({status:{error:true,message:`password not matching`}})
 
@@ -41,15 +37,75 @@ const user_register = async (req,res)=>{
 
     let addUser
     try {
-    addUser = await query(`INSERT INTO users(username,password,email) VALUES ('${username}','${hashedPwd}','${email}')`)
+     addUser = await query('INSERT INTO users(username,password,email,isAdmin) VALUES (?,?,?,?)',[username,hashedPwd,email,isAdmin])
     } catch {
         return res.json({status:{error:true,message:`error while adding username`}})
     }
     res.json({username:`${username}`,status:{error:null,message:`Successfully created user`}})
 }
 
+const user_login = async (req,res,next)=>{
+    res.json({status:{error:null,message:`User ${req.user.username} is successfully logged in`}})
+}
+
+const user_failed = async (err,req,res,next)=>{
+    res.json({status:{error:true,message:'Incorrect Username or Password'}})
+}
+
+const user_logout = async (req,res)=>{
+    const user = req.user.username
+    req.logout()
+    res.json({status:{error:null,message:`User ${user} is successfully logged out`}})
+   
+}
+
+const user_pwd = async (req,res)=>{
+    const {password,newpassword,newpassword2} = req.body
+    if (!password||!newpassword||!newpassword2) return res.json({status:{error:true,message:'password , new password and confirm password are required'}})
+    if (newpassword!==newpassword2)  return res.json({status:{error:true,message:'new password and confirm password are not matched'}})
+   
+    let user 
+    try {
+    user = await query('SELECT password FROM users WHERE username= ?',req.user.username) 
+    } catch {
+        return res.json({status:{error:true,message:'Error while getting old password'}})
+    }
+
+ 
+    let checkedPwd
+    try {
+        checkedPwd = bcrypt.compareSync(password,user[0].password)
+    } catch {
+        return res.json({status:{error:true,message:'Error while comparing password'}})
+    }
+
+    if (!checkedPwd) return res.json({status:{error:true,message:'Incorrect password'}})
+
+    if (password==newpassword) return res.json({status:{error:true,message:`can't change password same as current password`}})
+
+    let hashedPwd
+    try {
+        hashedPwd = bcrypt.hashSync(newpassword,10)
+    } catch {
+        return res.json({status:{error:true,message:'Error while hashing new password'}})
+    }
+    
+    let updatePwd
+    try{
+        updatePwd = await query('UPDATE users SET password = ? WHERE username = ?',[hashedPwd,req.user.username])
+    } catch  {
+        return res.json({status:{error:true,message:'Error while updating password'}})
+    }
+
+    res.json({status:{error:null,message:`User ${req.user.username} has successfully changed password`}})
+
+}
 
 module.exports = {
     all_user,
-    user_register
+    user_register,
+    user_login,
+    user_failed,
+    user_logout,
+    user_pwd
 }
