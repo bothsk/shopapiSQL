@@ -15,6 +15,19 @@ const all_user = async (req,res) => {
     res.json(data)
 }
 
+const user_detail = async (req,res)=>{
+    const {username} = req.params
+    let data 
+    try{
+        data = await query('SELECT * FROM users WHERE username = ?',username)
+    } catch {
+        return res.status(500).json({status:{error:true,message:'error while processing with Database'}})
+    }
+
+    if (data.length==0) return res.status(404).json({status:{error:true,message:'not found input user'}})
+    res.json(data)
+}
+
 const user_register = async (req,res)=>{
     const {username,password,password2,email,isAdmin} = req.body
     if (!username||!password||!password2||!email) return res.json({status:{error:true,message:`username, password, password2 and email are required`}})
@@ -107,5 +120,6 @@ module.exports = {
     user_login,
     user_failed,
     user_logout,
-    user_pwd
+    user_pwd,
+    user_detail
 }
