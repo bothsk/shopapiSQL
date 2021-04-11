@@ -16,7 +16,6 @@ const all_user = async (req,res) => {
     } catch (err){
         return res.json({status:{error:true,message:'error while processing with Database'}})
     }
-    
     res.json(data)
 }
 
@@ -48,6 +47,7 @@ const user_register = async (req,res)=>{
     }
     res.json({username:`${username}`,status:{error:null,message:`Successfully created user`}})
 }
+
 
 module.exports = {
     all_user,
