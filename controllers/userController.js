@@ -9,8 +9,8 @@ const all_user = async (req,res) => {
     let data
     try {
         data = await query(`SELECT * FROM users`)
-    } catch (err){
-        return res.json({status:{error:true,message:'error while processing with Database'}})
+    } catch {
+        return res.status(500).json({status:{error:true,message:'error while processing with Database'}})
     }
     res.json(data)
 }
@@ -28,7 +28,7 @@ const user_register = async (req,res)=>{
         existedUser = await query(`SELECT username FROM users WHERE username='${username}' or email='${email}'`)
         if (existedUser.length>0) return res.json({status:{error:true,message:`username or email is already existed`}})
     } catch {
-        return res.json({status:{error:true,message:`error while checking existed username`}})
+        return res.status(500).json({status:{error:true,message:`error while checking existed username`}})
     }
 
     let hashedPwd
@@ -39,7 +39,7 @@ const user_register = async (req,res)=>{
     try {
      addUser = await query('INSERT INTO users(username,password,email,isAdmin) VALUES (?,?,?,?)',[username,hashedPwd,email,isAdmin])
     } catch {
-        return res.json({status:{error:true,message:`error while adding username`}})
+        return res.status(500).json({status:{error:true,message:`error while adding username`}})
     }
     res.json({username:`${username}`,status:{error:null,message:`Successfully created user`}})
 }
@@ -68,7 +68,7 @@ const user_pwd = async (req,res)=>{
     try {
     user = await query('SELECT password FROM users WHERE username= ?',req.user.username) 
     } catch {
-        return res.json({status:{error:true,message:'Error while getting old password'}})
+        return res.status(500).json({status:{error:true,message:'Error while getting old password'}})
     }
 
  
@@ -94,7 +94,7 @@ const user_pwd = async (req,res)=>{
     try{
         updatePwd = await query('UPDATE users SET password = ? WHERE username = ?',[hashedPwd,req.user.username])
     } catch  {
-        return res.json({status:{error:true,message:'Error while updating password'}})
+        return res.status(500).json({status:{error:true,message:'Error while updating password'}})
     }
 
     res.json({status:{error:null,message:`User ${req.user.username} has successfully changed password`}})
