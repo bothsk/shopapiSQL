@@ -36,32 +36,83 @@ const remove_item = async (req,res) => {
     }
 }
 
+
 const buy_item = async (req,res) => {
-    const {id,qty} = req.body
-    if (!id||!qty) return res.status(422).json({status:{error:true,message:'id and qty are required'}})
+    const items = req.body
+    if (!items||!Array.isArray(items)) return  res.status(422).json({status:{error:true,message:'array of items are required'}})
+    let lists = []
+    let currentItem
+     for (x of items){
+        if (!x.id||!x.qty) return res.status(422).json({status:{error:true,message:'id and qty are required'}})
 
-    let currentQTY
-    try {
-        currentQTY = await query('SELECT name,qty FROM items WHERE id = ?',id)
-    } catch {
-        return res.status(409).json({status:{error:true,message:'Error while checking current qty'}})
+        
+        try {
+            currentItem = await query('SELECT name,qty FROM items WHERE id = ?',x.id)
+        } catch {
+            return res.status(409).json({status:{error:true,message:'Error while checking current item'}})
+        }
+        if (currentItem.length===0) return res.status(409).json({status:{error:true,message:`Not found input ID: ${x.id}`}})
+        const newQTY = currentItem[0].qty - x.qty
+        if (newQTY<0) {
+            return res.status(409).json({status:{error:true,message:`Can't completing orders, ${currentItem[0].name} have only ${currentItem[0].qty} lefts `}})
+        } else {
+            lists.push({
+                id:x.id,
+                qty:newQTY
+            })
+        }
     }
 
-    const newQTY = currentQTY[0].qty - qty
-    let buyItem
-    try {
-        buyItem = await query('UPDATE items SET qty = ? WHERE id = ?',[newQTY,id])
-    } catch {
-        return res.status(409).json({status:{error:true,message:'Error while updating qty'}})
-    }
-
-    res.status(200).json({status:{error:null,message:`${currentQTY[0].name} has been updated`}})
+   
+        let buyItem
+        lists.map(async x=>{
+            try {
+                buyItem = await query('UPDATE items SET qty = ? WHERE id = ?',[x.qty,x.id])
+            } catch {
+                return res.status(409).json({status:{error:true,message:'Error while updating qty'}})
+            }
+        })
+    
+    res.status(200).json({status:{error:null,message:`Purchased completed`}})
 }
+
+const edit_item = async (req,res)=>{
+    const {id} = req.params
+    const {name,qty,price,des} = req.body
+    if (!name||!qty||!price||!des) return res.status(422).json({status:{error:true,message:'name,qty,price and des are required'}})
+
+    try {
+        editItem = await query('UPDATE items SET name=?,qty=?,price=?,des=? WHERE id =?',[name,qty,price,des,id])
+        if (editItem.affectedRows==0) return res.status(409).json({status:{error:true,message:`Not found item ID: ${id}`}})
+    } catch {
+        return res.status(409).json({status:{error:true,message:'Error while editing item'}})
+    }
+   
+    res.status(200).json({status:{error:null,message:`Item has been updated`}})
+}
+
+const add_qty = async (req,res)=>{
+    const {id} = req.params
+    const {qty} = req.body
+    if (!qty) return res.status(422).json({status:{error:true,message:'qty is required'}})
+
+    try {
+        addUnits = await query('UPDATE items SET qty=? WHERE id =?',[qty,id])
+        if (addUnits.affectedRows==0) return res.status(409).json({status:{error:true,message:`Not found item ID: ${id}`}})
+    } catch {
+        return res.status(409).json({status:{error:true,message:'Error while adding item'}})
+    }
+   
+    res.status(200).json({status:{error:null,message:`Item has been updated`}})
+}
+
 
 
 module.exports = {
     all_items,
     create_item,
     remove_item,
-    buy_item
+    buy_item,
+    edit_item,
+    add_qty
 }
