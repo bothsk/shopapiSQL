@@ -16,10 +16,10 @@ const all_user = async (req,res) => {
 }
 
 const user_detail = async (req,res)=>{
-    const {username} = req.params
+    const {id} = req.params
     let data 
     try{
-        data = await query('SELECT * FROM users WHERE username = ?',username)
+        data = await query('SELECT * FROM users WHERE id = ?',id)
     } catch {
         return res.status(500).json({status:{error:true,message:'error while processing with Database'}})
     }
@@ -114,6 +114,23 @@ const user_pwd = async (req,res)=>{
 
 }
 
+const user_delete = async (req,res)=>{
+    const { id } = req.params
+    
+    let deleteUser
+    try {
+         deleteUser = await query('DELETE FROM users WHERE id = ?',id)
+    } catch {
+        return res.status(409).json({status:{error:true,message:'Error while deleting user'},})
+    }
+    
+    if (deleteUser.affectedRows===0) return res.status(409).json({status:{error:true,message:'Not found input user id'},})
+
+    res.json({status:{error:null,message:`User id ${id} has been deleted`}})
+
+    
+}
+
 module.exports = {
     all_user,
     user_register,
@@ -121,5 +138,6 @@ module.exports = {
     user_failed,
     user_logout,
     user_pwd,
-    user_detail
+    user_detail,
+    user_delete
 }
