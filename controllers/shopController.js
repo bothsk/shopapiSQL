@@ -47,7 +47,7 @@ const buy_item = async (req,res) => {
 
         
         try {
-            currentItem = await query('SELECT name,qty FROM items WHERE id = ?',x.id)
+            currentItem = await query('SELECT name,qty,price FROM items WHERE id = ?',x.id)
         } catch {
             return res.status(409).json({status:{error:true,message:'Error while checking current item'}})
         }
@@ -56,20 +56,31 @@ const buy_item = async (req,res) => {
         if (newQTY<0) {
             return res.status(409).json({status:{error:true,message:`Can't completing orders, ${currentItem[0].name} have only ${currentItem[0].qty} lefts `}})
         } else {
+            const newPrice = x.qty * currentItem[0].price
             lists.push({
                 id:x.id,
-                qty:newQTY
+                newQTY:newQTY,
+                qty:x.qty,
+                price:newPrice
             })
         }
     }
 
-   
+        let newOrder
+        try {
+            newOrder = await query('SELECT max(order_no) as maxNo FROM orders')
+        } catch {
+            return res.status(409).json({status:{error:true,message:'Error while checking order no.'}})
+        }
+        const orderNo = newOrder[0].maxNo+1
         let buyItem
+        let order
         lists.map(async x=>{
             try {
-                buyItem = await query('UPDATE items SET qty = ? WHERE id = ?',[x.qty,x.id])
+                buyItem = await query('UPDATE items SET qty = ? WHERE id = ?',[x.newQTY,x.id])
+                order = await query('INSERT INTO orders(order_no,item_id,qty,price,purchasedBy) VALUES (?,?,?,?,?)',[orderNo,x.id,x.qty,x.price,req.user.username])
             } catch {
-                return res.status(409).json({status:{error:true,message:'Error while updating qty'}})
+                return res.status(409).json({status:{error:true,message:'Error while creating order'}})
             }
         })
     
