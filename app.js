@@ -1,7 +1,10 @@
 require('dotenv').config()
 const express = require('express');
 const app = express()
+
 const userRoute = require('./routes/userRoute')
+const shopRoute = require('./routes/shopRoute')
+
 const passport = require('passport')
 const session = require('express-session')
 
@@ -21,7 +24,10 @@ app.use(
 app.use(passport.initialize())
 app.use(passport.session())  
 
-app.use('/',userRoute)
+app.use('/',shopRoute)
+app.use('/user',userRoute)
+
+
 
 
 

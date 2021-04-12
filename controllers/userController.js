@@ -128,8 +128,8 @@ const user_delete = async (req,res)=>{
 
     res.json({status:{error:null,message:`User id ${id} has been deleted`}})
 
-    
 }
+
 
 module.exports = {
     all_user,
