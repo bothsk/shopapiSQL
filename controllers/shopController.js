@@ -117,7 +117,30 @@ const add_qty = async (req,res)=>{
     res.status(200).json({status:{error:null,message:`Item has been updated`}})
 }
 
+const all_orders = async(req,res)=>{
+    
+    let allOrders
+    try {
+        allOrders = await query('SELECT * FROM orders')
+    } catch {
+        return res.status(409).json({status:{error:true,message:'Error while getting all orders'}})
+    }
 
+    res.status(200).json(allOrders)
+}
+
+const my_orders = async (req,res)=>{
+
+    let myOrders
+    try {
+        myOrders = await query('SELECT * FROM orders WHERE purchasedBy = ?',req.user.username)
+    } catch {
+        return res.status(409).json({status:{error:true,message:'Error while getting my orders'}})
+    }
+
+    res.status(200).json(myOrders)
+
+}
 
 module.exports = {
     all_items,
@@ -125,5 +148,7 @@ module.exports = {
     remove_item,
     buy_item,
     edit_item,
-    add_qty
+    add_qty,
+    all_orders,
+    my_orders
 }

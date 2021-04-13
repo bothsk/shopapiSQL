@@ -32,7 +32,7 @@ const user_register = async (req,res)=>{
     const {username,password,password2,email,isAdmin} = req.body
     if (!username||!password||!password2||!email) return res.json({status:{error:true,message:`username, password, password2 and email are required`}})
     if (password!==password2) return res.json({status:{error:true,message:`password not matching`}})
-
+    const admin = isAdmin==null ? 'false' : isAdmin
     if (!validator.validate(email)) return res.json({status:{error:true,message:`incorrect email input`}})
 
     let existedUser
@@ -50,9 +50,9 @@ const user_register = async (req,res)=>{
 
     let addUser
     try {
-     addUser = await query('INSERT INTO users(username,password,email,isAdmin) VALUES (?,?,?,?)',[username,hashedPwd,email,isAdmin])
-    } catch {
-        return res.status(500).json({status:{error:true,message:`error while adding username`}})
+     addUser = await query('INSERT INTO users(username,password,email,isAdmin) VALUES (?,?,?,?)',[username,hashedPwd,email,admin])
+    } catch (err) {
+        return res.status(500).json({status:{error:true,message:`error while adding username`},err})
     }
     res.json({username:`${username}`,status:{error:null,message:`Successfully created user`}})
 }
