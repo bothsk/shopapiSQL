@@ -6,7 +6,20 @@ const userRoute = require('./routes/userRoute')
 const shopRoute = require('./routes/shopRoute')
 
 const passport = require('passport')
+
 const session = require('express-session')
+const MySQLStore = require('express-mysql-session')(session);
+
+const options = {
+	host: process.env.DBHOST,
+	port: 3306,
+	user: process.env.DBUSER,
+	password: process.env.DBPWD,
+	database: process.env.DB,
+  expiration: 86400000
+};
+
+const sessionStore = new MySQLStore(options);
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
@@ -16,6 +29,7 @@ app.use(express.urlencoded({extended: false}))
 app.use(
     session({
       secret: process.env.ssSecret,
+      store: sessionStore,
       resave: false,
       saveUninitialized: false,
         })

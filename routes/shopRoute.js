@@ -4,11 +4,11 @@ const { all_items, create_item,remove_item, buy_item, edit_item,add_qty,all_orde
 const {isLoggedIn,isAdmin} = require('../passport')
 
 router.get('/',all_items)
-router.post('/create',create_item)
-router.delete('/:id',remove_item)
-router.put('/:id',edit_item)
-router.patch('/add/:id',add_qty)
+router.post('/create',isLoggedIn,isAdmin,create_item)
+router.delete('/:id',isLoggedIn,isAdmin,remove_item)
+router.put('/:id',isLoggedIn,isAdmin,edit_item)
+router.patch('/add/:id',isLoggedIn,isAdmin,add_qty)
 router.patch('/buy',isLoggedIn,buy_item)
-router.get('/myorder',isLoggedIn,my_orders)
-router.get('/orders',all_orders)
+router.get('/myorders',isLoggedIn,my_orders)
+router.get('/orders',isLoggedIn,isAdmin,all_orders)
 module.exports = router
