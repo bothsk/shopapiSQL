@@ -7,13 +7,13 @@ require('../passport')
 
 router.get('/',isLoggedIn,isAdmin,all_user)
 
-router.get('/detail/:id',user_detail)
+router.get('/detail/:id',isLoggedIn,isAdmin,user_detail)
 
 router.post('/register',isLoggedOut,user_register)
 
 router.patch('/pwd',isLoggedIn,user_pwd)
 
-router.delete('/:id',user_delete)
+router.delete('/:id',isLoggedIn,isAdmin,user_delete)
 
 router.post('/login',isLoggedOut,passport.authenticate('local', { failWithError: true }),user_login,user_failed)
 
